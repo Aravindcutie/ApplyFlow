@@ -1,120 +1,17 @@
-import { useEffect, useState } from "react";
-import { getApplications } from "../services/applicationService";
-
 import DashboardHeader from "../components/DashboardHeader";
-import RecentApplications from "../components/RecentApplications";
-import AddApplicationForm from "../components/AddApplicationForm";
-import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
-import SearchFilterBar from "../components/SearchFilterBar";
 import StatCard from "../components/StatCard";
+
+import useApplications from "../hooks/useApplications";
 
 const DashboardPage = () => {
 
-    const [applications, setApplications] = useState([]);
-    const [selectedApplication, setSelectedApplication] = useState(null);
+    const {
 
-    const [applicationToDelete, setApplicationToDelete] = useState(null);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+        totalApplications,
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All");
-    const [sortOption, setSortOption] = useState("Newest");
+        statusCounts
 
-    // Fetch Data
-
-    const fetchApplications = async () => {
-
-        const data = await getApplications();
-
-        setApplications(data);
-
-    };
-
-    useEffect(() => {
-
-        fetchApplications();
-
-    }, []);
-
-    // Dashboard Statistics
-
-    const totalApplications = applications.length;
-
-    const statusCounts = applications.reduce(
-
-        (counts, app) => {
-
-            counts[app.status] = (counts[app.status] || 0) + 1;
-
-            return counts;
-
-        },
-
-        {}
-
-    );
-
-    const appliedCount = statusCounts.Applied || 0;
-    const interviewCount = statusCounts.Interview || 0;
-    const rejectedCount = statusCounts.Rejected || 0;
-
-    // Search
-
-    let filteredApplications = applications.filter((app) =>
-
-        app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-
-        app.role.toLowerCase().includes(searchTerm.toLowerCase())
-
-    );
-
-    // Status Filter
-
-    if (statusFilter !== "All") {
-
-        filteredApplications = filteredApplications.filter(
-
-            (app) => app.status === statusFilter
-
-        );
-
-    }
-
-    // Sorting
-
-    switch (sortOption) {
-
-        case "Oldest":
-
-            filteredApplications.sort((a, b) => a.id - b.id);
-
-            break;
-
-        case "CompanyAZ":
-
-            filteredApplications.sort(
-
-                (a, b) => a.company.localeCompare(b.company)
-
-            );
-
-            break;
-
-        case "CompanyZA":
-
-            filteredApplications.sort(
-
-                (a, b) => b.company.localeCompare(a.company)
-
-            );
-
-            break;
-
-        default:
-
-            filteredApplications.sort((a, b) => b.id - a.id);
-
-    }
+    } = useApplications();
 
     return (
 
@@ -131,63 +28,59 @@ const DashboardPage = () => {
 
                 <StatCard
                     title="Applied"
-                    value={appliedCount}
+                    value={statusCounts.Applied || 0}
                 />
 
                 <StatCard
                     title="Interviews"
-                    value={interviewCount}
+                    value={statusCounts.Interview || 0}
                 />
 
                 <StatCard
                     title="Rejections"
-                    value={rejectedCount}
+                    value={statusCounts.Rejected || 0}
                 />
 
             </div>
 
-            <AddApplicationForm
-                application={selectedApplication}
-                onApplicationAdded={fetchApplications}
-                onEditComplete={() => setSelectedApplication(null)}
-            />
+            <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-8">
 
-            <SearchFilterBar
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                statusFilter={statusFilter}
-                onStatusFilterChange={setStatusFilter}
-                sortOption={sortOption}
-                onSortChange={setSortOption}
-                totalApplications={applications.length}
-                filteredApplicationsCount={filteredApplications.length}
-            />
+                <h2 className="text-2xl font-semibold">
 
-            <RecentApplications
-                applications={filteredApplications}
-                selectedApplication={selectedApplication}
-                onEdit={setSelectedApplication}
-                onDelete={(application) => {
+                    Welcome Back 👋
 
-                    setApplicationToDelete(application);
+                </h2>
 
-                    setShowDeleteModal(true);
+                <p className="mt-3 text-slate-400">
 
-                }}
-            />
+                    Track your applications, monitor interview progress,
+                    and gain insights into your job search journey.
 
-            <DeleteConfirmationModal
-                isOpen={showDeleteModal}
-                application={applicationToDelete}
-                onClose={() => {
+                </p>
 
-                    setShowDeleteModal(false);
-                    setApplicationToDelete(null);
+                <div className="mt-6 rounded-lg border border-blue-500/20 bg-blue-500/10 p-5">
 
-                }}
-                onDeleteSuccess={fetchApplications}
-                onEditComplete={() => setSelectedApplication(null)}
-            />
+                    <p className="font-medium text-blue-300">
+
+                        🚀 Coming Soon
+
+                    </p>
+
+                    <ul className="mt-3 space-y-2 text-slate-300">
+
+                        <li>📈 Analytics Dashboard</li>
+
+                        <li>🤖 AI Resume Matching</li>
+
+                        <li>📄 ATS Resume Score</li>
+
+                        <li>🎯 Personalized Suggestions</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
 
         </div>
 
