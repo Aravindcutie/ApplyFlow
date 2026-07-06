@@ -73,3 +73,60 @@ def create_application(application: dict):
     return {
         "message": "Application created successfully"
     }   
+
+@app.put("/applications/{application_id}")
+def update_application(application_id: int, application: dict):
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE applications
+        SET
+            company = %s,
+            role = %s,
+            status = %s
+        WHERE id = %s
+        """,
+        (
+            application["company"],
+            application["role"],
+            application["status"],
+            application_id
+        )
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return {
+        "message": "Application updated successfully"
+    }
+
+@app.delete("/applications/{application_id}")
+def delete_application(application_id: int):
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM applications
+        WHERE id = %s
+        """,
+        (application_id,)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return {
+        "message": "Application deleted successfully"
+    }

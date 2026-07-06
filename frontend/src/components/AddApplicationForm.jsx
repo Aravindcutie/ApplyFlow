@@ -1,51 +1,141 @@
 import toast from "react-hot-toast";
-import { useState } from "react";
-import { createApplication } from "../services/applicationService";
+import { useEffect, useRef, useState } from "react";
+import {
+    createApplication,
+    updateApplication
+} from "../services/applicationService";
 
-const AddApplicationForm = ({ onApplicationAdded }) => {
+const AddApplicationForm = ({
+    application,
+    onApplicationAdded,
+    onEditComplete
+}) => {
 
     const [company, setCompany] = useState("");
     const [role, setRole] = useState("");
     const [status, setStatus] = useState("Applied");
     const [loading, setLoading] = useState(false);
+    const [highlight, setHighlight] = useState(false);
+
+    const formRef = useRef(null);
+
+    useEffect(() => {
+
+        if (application) {
+
+            setCompany(application.company);
+            setRole(application.role);
+            setStatus(application.status);
+
+            formRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            setHighlight(true);
+
+            setTimeout(() => {
+                setHighlight(false);
+            }, 1800);
+
+        }
+
+    }, [application]);
+
+    const clearForm = () => {
+
+        setCompany("");
+        setRole("");
+        setStatus("Applied");
+
+    };
 
     const handleSubmit = async (e) => {
 
         e.preventDefault();
+
         setLoading(true);
-        try{
-            await createApplication({
-                company,
-                role,
-                status
-            });
 
-            toast.success("Application added successfully!");
+        try {
 
-            setCompany("");
-            setRole("");
-            setStatus("Applied");
+            if (application) {
 
-            onApplicationAdded();
+                await updateApplication(
+                    application.id,
+                    {
+                        company,
+                        role,
+                        status
+                    }
+                );
+
+                toast.success("Application updated successfully!");
+
+                clearForm();
+
+                onApplicationAdded();
+
+                onEditComplete();
+
+            } else {
+
+                await createApplication({
+                    company,
+                    role,
+                    status
+                });
+
+                toast.success("Application added successfully!");
+
+                clearForm();
+
+                onApplicationAdded();
+
+            }
+
         }
 
         catch (error) {
+
             console.error(error);
-            toast.error("Failed to add application.");
+
+            toast.error("Operation failed.");
+
         }
 
         finally {
+
             setLoading(false);
+
         }
-    
+
     };
 
     return (
 
-        <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-6">
+        <div
+            ref={formRef}
+            className={`mt-8 rounded-xl bg-slate-900 p-6 transition-all duration-500 ${
+                highlight
+                    ? "border-2 border-blue-400 shadow-[0_0_30px_rgba(59,130,246,0.9)] scale-[1.01]"
+                    : "border border-slate-800"
+            }`}
+        >
 
-            <h2 className="mb-5 text-xl font-semibold">
-                Add Application
+            <h2
+                className={`mb-5 text-xl font-semibold transition-all duration-300 ${
+                    highlight
+                        ? "animate-pulse text-blue-400"
+                        : "text-white"
+                }`}
+            >
+
+                {
+                    application
+                        ? `✏️ Editing: ${application.company}`
+                        : "Add Application"
+                }
+
             </h2>
 
             <form
@@ -74,24 +164,47 @@ const AddApplicationForm = ({ onApplicationAdded }) => {
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3"
                 >
-
                     <option>Applied</option>
                     <option>Interview</option>
                     <option>Rejected</option>
-
                 </select>
 
-                <button
-                    type="submit"
-                    className="w-full rounded-lg bg-blue-600 p-3 font-medium hover:bg-blue-700"
-                    disabled={loading}
-                >
+                <div className="flex gap-3">
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 rounded-lg bg-blue-600 p-3 font-medium transition-colors hover:bg-blue-700"
+                    >
+                        {
+                            loading
+                                ? "Saving..."
+                                : application
+                                    ? "Save Changes"
+                                    : "Add Application"
+                        }
+                    </button>
                     {
-                        loading
-                            ? "Adding..."
-                            : "Add Application"
+                        application && (
+
+                            <button
+                                type="button"
+                                onClick={() => {                                    
+                                    onEditComplete();
+                                    clearForm();
+                                    toast("Edit cancelled");
+                                }}
+                                className="flex-1 rounded-lg border border-slate-600 bg-slate-800 p-3 font-medium transition-colors hover:bg-slate-700"
+                            >
+
+                                Cancel
+
+                            </button>
+
+                        )
                     }
-                </button>
+
+                </div>
 
             </form>
 
